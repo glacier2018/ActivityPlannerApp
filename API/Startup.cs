@@ -34,6 +34,7 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationService(_config);
+            services.AddIdentityServices(_config);
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -48,6 +49,8 @@ namespace API
             // app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
