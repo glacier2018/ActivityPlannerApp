@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Core;
 using Domain;
+using FluentValidation;
 using MediatR;
 using Persistence;
 
@@ -11,13 +13,20 @@ namespace Application.Activities
 {
     public class Create
     {
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         //since this will be a Command and doesn't return anything,
         //IRequest Interface won't have a type value as the return type
         {
             public Activity Activity { get; set; }
         }
-        public class Handler : IRequestHandler<Command>
+        public class CommandValidator : AbstractValidator<Command>
+        {
+            public CommandValidator()
+            {
+                RuleFor(x => x.Activity).SetValidator(new ActivityValidator());
+            }
+        }
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         //IRequestHandler also just have one type parameter since it won't return anything
         {
             private readonly DataContext _context;
@@ -25,13 +34,16 @@ namespace Application.Activities
             {
                 _context = context;
             }
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 _context.Activities.Add(request.Activity);
-                //this operation doens't have to AddAsync since that one is for SQL server
-                // it's just in memory at current stage.
-                await _context.SaveChangesAsync();
-                return Unit.Value;
+
+                var result = await _context.SaveChangesAsync() > 0; //result now is a bool and will
+                                                                    //and will be true if save succeed and false if failed
+                if (!result) return Result<Unit>.Failure("Failed to create activity!");
+
+                return Result<Unit>.Success(Unit.Value);  //Unit.Value should be nothing   
+
             }
         }
     }
