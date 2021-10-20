@@ -1,5 +1,6 @@
 using Application.Activities;
 using Application.Core;
+using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -19,12 +20,18 @@ namespace API.Extensions
             IConfiguration config
         )
         {
-            services.AddControllers( opt => 
-            {
-                var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            services.AddControllers(opt =>
+           {
+               var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
 
-                opt.Filters.Add(new AuthorizeFilter(policy));
-            });
+               opt.Filters.Add(new AuthorizeFilter(policy));
+           })
+            .AddFluentValidation(config =>
+           {
+               config.RegisterValidatorsFromAssemblyContaining<Create>();
+            //    config.RegisterValidatorsFromAssemblyContaining<Edit>();
+           }
+            );
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
