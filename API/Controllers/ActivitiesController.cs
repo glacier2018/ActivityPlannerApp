@@ -13,7 +13,7 @@ using Persistence;
 
 namespace API.Controllers
 {
-    [AllowAnonymous]
+
     public class ActivitiesController : BaseApiController
     {
         [HttpGet]
@@ -29,7 +29,7 @@ namespace API.Controllers
         {
             var result = await Mediator.Send(new GetOne.Query { Id = id });
 
-            return HandleResult<Activity>(result);
+            return HandleResult<ActivityDto>(result);
 
         }
 

@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Core;
+using Application.Interfaces;
 using Domain;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Persistence;
 
 namespace Application.Activities
@@ -30,12 +32,28 @@ namespace Application.Activities
         //IRequestHandler also just have one type parameter since it won't return anything
         {
             private readonly DataContext _context;
-            public Handler(DataContext context)
+            private readonly IUserAccessor _userAccessor;
+
+            public Handler(DataContext context, IUserAccessor userAccessor)
             {
                 _context = context;
+                _userAccessor = userAccessor;
             }
             public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
+                var user = await _context.Users.FirstOrDefaultAsync(appUser =>
+                appUser.UserName == _userAccessor.GetUsername());
+
+                var activity = request.Activity;
+
+                activity.Attendees.Add(new ActivityAttendee
+                {
+                    AppUserId = user.Id,
+                    AppUser = user,
+                    ActivityId = activity.Id,
+                    Activity = activity,
+                    IsHost = true
+                });
                 _context.Activities.Add(request.Activity);
 
                 var result = await _context.SaveChangesAsync() > 0; //result now is a bool and will
