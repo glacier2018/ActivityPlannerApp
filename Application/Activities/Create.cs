@@ -48,17 +48,16 @@ namespace Application.Activities
 
                 activity.Attendees.Add(new ActivityAttendee
                 {
-                    AppUserId = user.Id,
+
                     AppUser = user,
-                    ActivityId = activity.Id,
                     Activity = activity,
                     IsHost = true
                 });
                 _context.Activities.Add(request.Activity);
 
                 var result = await _context.SaveChangesAsync() > 0; //result now is a bool and will
+                                                                    //and will be true if save succ
                                                                     //and will be true if save succeed and false if failed
-                if (!result) return Result<Unit>.Failure("Failed to create activity!");
 
                 return Result<Unit>.Success(Unit.Value);  //Unit.Value should be nothing   
 

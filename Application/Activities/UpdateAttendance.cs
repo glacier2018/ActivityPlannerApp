@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Core;
 using Application.Interfaces;
+using Domain;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -33,18 +34,38 @@ namespace Application.Activities
 
             public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
-                var activity = await _context.Activities.FindAsync(request.Id);
+                // var activity = await _context.Activities.FindAsync(request.Id);
+
+                var activity = await _context.Activities
+                   .Include(a => a.Attendees)
+                   .ThenInclude(aa => aa.AppUser)
+                   .FirstOrDefaultAsync(a => a.Id == request.Id);
+
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == _userAccessor.GetUsername());
 
                 if (user == null || activity == null) return null;
 
-                bool IsHost = _userAccessor.GetUsername() == activity.Attendees.FirstOrDefault(x => x.IsHost).AppUser.UserName;
+                var hostName = activity.Attendees.FirstOrDefault(x => x.IsHost)?.AppUser?.UserName;
 
+                var attendance = activity.Attendees.FirstOrDefault(aa => aa.AppUser.UserName == user.UserName);
 
-                if (IsHost) activity.IsCancelled = !activity.IsCancelled;
-                activity.Attendees.Remove(activity.Attendees.FirstOrDefault(x => x.AppUser.UserName == _userAccessor.GetUsername()));
+                if (hostName == user.UserName && attendance != null)
+                    activity.IsCancelled = !activity.IsCancelled;
 
+                if (hostName != user.UserName && attendance != null)
+                    activity.Attendees.Remove(attendance);
 
+                if (attendance == null)
+                {
+                    attendance = new ActivityAttendee
+                    {
+                        AppUser = user,
+                        Activity = activity,
+                        IsHost = false,
+
+                    };
+                    activity.Attendees.Add(attendance);
+                }
                 var result = await _context.SaveChangesAsync() > 0;
 
                 return result

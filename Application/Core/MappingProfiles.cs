@@ -24,7 +24,7 @@ namespace Application.Core
             CreateMap<ActivityAttendee, UserProfile>()
                 .ForMember(
                     dest => dest.DisplayName,
-                    opt => opt.MapFrom(aa => aa.AppUser.UserName))
+                    opt => opt.MapFrom(aa => aa.AppUser.DisplayName))
                 .ForMember(
                     dest => dest.Bio,
                     opt => opt.MapFrom(aa => aa.AppUser.Bio))

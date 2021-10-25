@@ -29,4 +29,4 @@ namespace Persistence
                 .HasForeignKey(aa => aa.ActivityId);
         }
     }
-}
+}       
