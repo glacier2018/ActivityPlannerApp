@@ -30,7 +30,20 @@ namespace Application.Core
                     opt => opt.MapFrom(aa => aa.AppUser.Bio))
                 .ForMember(
                     dest => dest.Username,
-                    opt => opt.MapFrom(aa => aa.AppUser.UserName));
+                    opt => opt.MapFrom(aa => aa.AppUser.UserName))
+                .ForMember(
+                    dest => dest.Image,
+                    opt => opt.MapFrom(aa => aa.AppUser.Photos.FirstOrDefault(x => x.IsMain).Url))
+                .ForMember(
+                    dest => dest.Photos,
+                    opt => opt.Ignore());
+
+            CreateMap<AppUser, UserProfile>()
+                .ForMember(
+                    dest => dest.Image,
+                    opt => opt.MapFrom(au => au.Photos.FirstOrDefault(x => x.IsMain).Url)
+                );
+
         }
     }
 }
